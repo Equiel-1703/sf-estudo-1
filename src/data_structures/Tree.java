@@ -10,6 +10,7 @@ public class Tree implements Iterable<Tree.Node> {
 		private List<Node> childs;
 		private Node parent;
 		private String id;
+		private int level;
 
 		public Object content;
 
@@ -18,6 +19,12 @@ public class Tree implements Iterable<Tree.Node> {
 			this.childs = new ArrayList<>();
 			this.content = content;
 			this.id = id;
+
+			if (parent != null) {
+				this.level = parent.level + 1;
+			} else {
+				this.level = 0;
+			}
 		}
 
 		public Node(Node parent, Object content) {
@@ -26,6 +33,10 @@ public class Tree implements Iterable<Tree.Node> {
 
 		public String getId() {
 			return id;
+		}
+
+		public int getLevel() {
+			return level;
 		}
 
 		public Node getParent() {
@@ -66,13 +77,15 @@ public class Tree implements Iterable<Tree.Node> {
 	}
 
 	private Node root;
-
-	public Tree() {
-		root = new Node(null, null, "root");
-	}
+	private int noOfNodes = 0;
 
 	public Tree(Object content) {
 		root = new Node(null, content, "root");
+		noOfNodes++;
+	}
+
+	public Tree() {
+		this(null);
 	}
 
 	public Node getRoot() {
@@ -82,15 +95,22 @@ public class Tree implements Iterable<Tree.Node> {
 	public void addNode(Node parent, Object content) {
 		Node n = new Node(parent, content);
 		parent.addChild(n);
+		noOfNodes++;
 	}
 
 	public void addNode(Node parent, Object content, String id) {
 		Node n = new Node(parent, content, id);
 		parent.addChild(n);
+		noOfNodes++;
 	}
 
 	public void removeNode(Node n) {
 		n.getParent().removeChild(n.content);
+		noOfNodes--;
+	}
+
+	public int getNoOfNodes() {
+		return noOfNodes;
 	}
 
 	@Override
@@ -117,7 +137,7 @@ public class Tree implements Iterable<Tree.Node> {
 				if (toVisit.isEmpty()) {
 					currentNode = null;
 				} else {
-					currentNode = toVisit.poll();
+					currentNode = toVisit.pop();
 				}
 
 				return ret;
@@ -125,4 +145,18 @@ public class Tree implements Iterable<Tree.Node> {
 		};
 	}
 
+	public void printTree() {
+		String[] printTree = new String[this.getNoOfNodes()];
+		int i = 0;
+
+		for (Tree.Node n : this) {
+			printTree[i] = "+".repeat(n.getLevel()) + n.content.toString();
+			i += 1;
+		}
+
+		System.out.println("Tree: ");
+		for (String s : printTree) {
+			System.out.println(s);
+		}
+	}
 }
