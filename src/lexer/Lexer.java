@@ -4,6 +4,8 @@ import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import lexer.exceptions.UnrecognizedToken;
+
 public class Lexer {
 	// This enum contains all the possible tokens accepted by the language and their respective regular expression
 	private enum PossibleTokens {
@@ -13,7 +15,8 @@ public class Lexer {
 		MULT("\\*"),
 		DIV("/"),
 		LPAREN("\\("),
-		RPAREN("\\)");
+		RPAREN("\\)"),
+		ERROR(".+");
 		
 		public Pattern pattern;
 		
@@ -27,6 +30,9 @@ public class Lexer {
 	// Constructor for the Lexer class
 	public Lexer(String input) {
 		this.input = input;
+		System.out.println("Brute input: " + this.input);
+		setupString();
+		System.out.println("Processed input: " + this.input);
 		this.tokensPattern = createTokensPattern();
 	}
 
@@ -41,11 +47,19 @@ public class Lexer {
 		return Pattern.compile(pattern.substring(1));
 	}
 
-	public LinkedList<Token> tokenize() {
-		// Create a matcher for the input
+	// This function takes care of eliminating whitespaces and identation from the input
+	private void setupString() {
+		Pattern thingsToDeletePtrn = Pattern.compile("\\s");
+		Matcher matcher = thingsToDeletePtrn.matcher(input);
+
+		this.input = matcher.replaceAll("");
+	}
+
+	public LinkedList<Token> tokenize() throws UnrecognizedToken {
+		// Create a matcher for the input string
 		Matcher matcher = tokensPattern.matcher(input);
 
-		// Create empty list for the result
+		// Create an empty list for the result
 		LinkedList<Token> tokensList = new LinkedList<>();
 
 		// While matches are found, keep looping		
@@ -55,8 +69,13 @@ public class Lexer {
 			
 			// Check witch token matched to create the apropriate Token object
 			for(PossibleTokens t : PossibleTokens.values()) {
-				if (matcher.group(t.name()) != null)
+				if (matcher.group(t.name()) != null) {
+					if (t.name() == PossibleTokens.ERROR.name())
+						throw new UnrecognizedToken(matchStr, matcher.start() + 1);
+				
 					tokensList.add(new Token(t.name(), matchStr));
+					break;
+				}
 			}
 		}
 		
@@ -65,10 +84,14 @@ public class Lexer {
 	}
 
 	public static void main(String[] args) {
-		String input = "1 + 1 * 2";
+		String input = "1   + 		1 * 22 +	";
 
 		var lexer = new Lexer(input);
 		
-		System.out.println(lexer.tokenize());
+		try {
+			System.out.println(lexer.tokenize());
+		} catch (Exception e) {
+			System.err.println(e);
+		}
 	}
 }
